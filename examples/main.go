@@ -14,7 +14,7 @@ var log zerolog.Logger
 func main() {
 
 	multiWriter := io.MultiWriter(
-		os.Stdout,
+		zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339},
 		herolog.NewLogHTTPWriter("http://0.0.0.0:2021"),
 	)
 	zerolog.TimeFieldFormat = time.RFC3339Nano
