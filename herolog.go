@@ -1,7 +1,8 @@
-package main // TODO: make this "herolog" when example code finalised
+package herolog
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"os"
 
@@ -10,6 +11,8 @@ import (
 
 // LogHTTPWriter attempts to send logs to a server via HTTP POST.
 type LogHTTPWriter struct {
+	Writer io.Writer
+
 	serverURL   string         // The server URL to which logs will be sent
 	errorLogger zerolog.Logger // Logger for internal errors
 }
