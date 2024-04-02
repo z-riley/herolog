@@ -13,15 +13,17 @@ import (
 type LogHTTPWriter struct {
 	Writer io.Writer
 
-	serverURL   string         // The server URL to which logs will be sent
-	errorLogger zerolog.Logger // Logger for internal errors
+	serverURL     string         // The server URL to which logs will be sent
+	warnOnHttpErr bool           // If true, generate warning message when HTTP logging fails
+	errorLogger   zerolog.Logger // Logger for internal errors
 }
 
 // NewLogHTTPWriter creates a new instance of LogHTTPWriter.
-func NewLogHTTPWriter(serverURL string) *LogHTTPWriter {
+func NewLogHTTPWriter(serverURL string, warnOnHttpErr bool) *LogHTTPWriter {
 	return &LogHTTPWriter{
-		serverURL:   serverURL,
-		errorLogger: zerolog.New(os.Stderr).With().Caller().Timestamp().Logger(),
+		serverURL:     serverURL,
+		warnOnHttpErr: warnOnHttpErr,
+		errorLogger:   zerolog.New(os.Stderr).With().Caller().Timestamp().Logger(),
 	}
 }
 
@@ -29,7 +31,9 @@ func NewLogHTTPWriter(serverURL string) *LogHTTPWriter {
 func (w *LogHTTPWriter) Write(p []byte) (n int, err error) {
 	req, err := http.NewRequest("POST", w.serverURL, bytes.NewBuffer(p))
 	if err != nil {
-		w.errorLogger.Warn().Err(err).Msg("Failed to create HTTP request for logging")
+		if w.warnOnHttpErr {
+			w.errorLogger.Warn().Err(err).Msg("Failed to create HTTP request for logging")
+		}
 		return len(p), err
 	}
 
@@ -38,7 +42,9 @@ func (w *LogHTTPWriter) Write(p []byte) (n int, err error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		w.errorLogger.Warn().Err(err).Msg("Failed to send log via HTTP")
+		if w.warnOnHttpErr {
+			w.errorLogger.Warn().Err(err).Msg("Failed to send log via HTTP")
+		}
 	}
 	if resp != nil {
 		defer resp.Body.Close()
