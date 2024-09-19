@@ -1,2 +1,2 @@
 # herolog
-HTTP writer for Zerolog 
+HTTP writer for logging
